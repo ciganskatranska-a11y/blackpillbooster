@@ -396,6 +396,42 @@ if (process.env.BLACKPILL_FAKE_AUDIO) {
 }
 if (process.env.BLACKPILL_DEBUG_PORT) app.commandLine.appendSwitch("remote-debugging-port", process.env.BLACKPILL_DEBUG_PORT);
 
+function checkForUpdates() {
+	if (!app.isPackaged) return;
+	let autoUpdater;
+	try {
+		({ autoUpdater } = require("electron-updater"));
+	} catch {
+		return;
+	}
+	autoUpdater.autoDownload = false;
+	autoUpdater.autoInstallOnAppQuit = false;
+	autoUpdater.on("error", error => console.error("Update error:", error?.message || error));
+	autoUpdater.on("update-available", async info => {
+		const { response } = await dialog.showMessageBox(mainWindow?.isDestroyed() ? undefined : mainWindow, {
+			type: "info",
+			title: "Update available",
+			message: `Blackpill Booster v${info.version} is available.`,
+			detail: `You have v${app.getVersion()}. Download and install it now? The app will restart when it's done.`,
+			buttons: ["Update", "Not now"],
+			defaultId: 0,
+			cancelId: 1
+		});
+		if (response !== 0) return;
+		autoUpdater.on("download-progress", progress => mainWindow?.setProgressBar(progress.percent / 100));
+		autoUpdater.once("update-downloaded", () => {
+			mainWindow?.setProgressBar(-1);
+			isQuitting = true;
+			autoUpdater.quitAndInstall(false, true);
+		});
+		autoUpdater.downloadUpdate().catch(error => {
+			mainWindow?.setProgressBar(-1);
+			dialog.showErrorBox("Update failed", String(error?.message || error));
+		});
+	});
+	autoUpdater.checkForUpdates().catch(() => {});
+}
+
 if (!app.requestSingleInstanceLock()) {
 	app.quit();
 } else {
@@ -409,6 +445,7 @@ if (!app.requestSingleInstanceLock()) {
 		setupIpc();
 		createTray();
 		createWindow();
+		checkForUpdates();
 	});
 
 	app.on("window-all-closed", () => {

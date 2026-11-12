@@ -1,7 +1,7 @@
 {
 	"name": "blackpill-booster",
 	"productName": "Blackpill Booster",
-	"version": "7.0.0",
+	"version": "7.1.0",
 	"description": "Mog the whole PC. System-wide volume booster with a mastering-grade Loudmaxx chain, EQ, voice changer and BONESMASHING.",
 	"main": "main.js",
 	"author": "Blackpill",
@@ -21,7 +21,9 @@
 		"appId": "com.blackpill.booster",
 		"productName": "Blackpill Booster",
 		"asar": false,
-		"electronLanguages": ["en-US"],
+		"electronLanguages": [
+			"en-US"
+		],
 		"directories": {
 			"output": "dist",
 			"buildResources": "build"
@@ -35,9 +37,12 @@
 			"icons/**",
 			"package.json"
 		],
+		"publish": [{ "provider": "github", "owner": "ciganskatranska-a11y", "repo": "blackpillbooster", "releaseType": "release" }],
 		"win": {
 			"icon": "build/icon.ico",
-			"target": ["nsis"]
+			"target": [
+				"nsis"
+			]
 		},
 		"nsis": {
 			"oneClick": false,
@@ -46,8 +51,11 @@
 			"createDesktopShortcut": true,
 			"createStartMenuShortcut": true,
 			"shortcutName": "Blackpill Booster",
-			"artifactName": "Blackpill Booster Setup.exe",
+			"artifactName": "Blackpill-Booster-Setup.exe",
 			"include": "build/installer.nsh"
 		}
+	},
+	"dependencies": {
+		"electron-updater": "^6.6.2"
 	}
 }
