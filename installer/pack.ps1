@@ -1,21 +1,33 @@
+param(
+	# "stub": compile installer\Setup.cs to build-stub\Blackpill Booster Uninstaller.exe (run BEFORE npm run dist,
+	#         electron-builder ships it in the install folder as the uninstaller).
+	# "wrap": append dist\blackpill-booster-core.exe to that exe -> dist\Blackpill-Booster-Setup.exe + dist\latest.yml.
+	[ValidateSet("stub", "wrap")][string]$Stage = "wrap"
+)
 $ErrorActionPreference = "Stop"
-
-# Wraps dist\blackpill-booster-core.exe (electron-builder NSIS output) in the styled setup
-# window and writes dist\Blackpill-Booster-Setup.exe plus a matching dist\latest.yml.
 
 $root = Split-Path -Parent $PSScriptRoot
 $dist = Join-Path $root "dist"
-$core = Join-Path $dist "blackpill-booster-core.exe"
-$stub = Join-Path $dist "setup-stub.exe"
-$output = Join-Path $dist "Blackpill-Booster-Setup.exe"
+$stubDir = Join-Path $root "build-stub"
+$stub = Join-Path $stubDir "Blackpill Booster Uninstaller.exe"
 $version = (Get-Content (Join-Path $root "package.json") -Raw | ConvertFrom-Json).version
-if (-not (Test-Path $core)) { throw "Missing $core. Run npm run dist first." }
 
-$buildInfo = Join-Path $dist "BuildInfo.cs"
-Set-Content -Path $buildInfo -Encoding UTF8 -Value "static class BuildInfo { public const string Version = `"$version`"; }"
-$csc = Join-Path $env:WINDIR "Microsoft.NET\Framework64\v4.0.30319\csc.exe"
-& $csc /nologo /target:winexe /optimize+ /platform:anycpu "/out:$stub" "/win32icon:$(Join-Path $root 'build\icon.ico')" /r:System.Windows.Forms.dll /r:System.Drawing.dll (Join-Path $PSScriptRoot "Setup.cs") $buildInfo
-if ($LASTEXITCODE) { throw "csc failed with code $LASTEXITCODE" }
+if ($Stage -eq "stub") {
+	New-Item -ItemType Directory -Force $stubDir | Out-Null
+	$buildInfo = Join-Path $stubDir "BuildInfo.cs"
+	Set-Content -Path $buildInfo -Encoding UTF8 -Value "static class BuildInfo { public const string Version = `"$version`"; }"
+	$csc = Join-Path $env:WINDIR "Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+	& $csc /nologo /target:winexe /optimize+ /platform:anycpu "/out:$stub" "/win32icon:$(Join-Path $root 'build\icon.ico')" /r:System.Windows.Forms.dll /r:System.Drawing.dll (Join-Path $PSScriptRoot "Setup.cs") $buildInfo
+	if ($LASTEXITCODE) { throw "csc failed with code $LASTEXITCODE" }
+	Remove-Item $buildInfo
+	Write-Output "Built $stub for v$version"
+	exit 0
+}
+
+$core = Join-Path $dist "blackpill-booster-core.exe"
+$output = Join-Path $dist "Blackpill-Booster-Setup.exe"
+if (-not (Test-Path $core)) { throw "Missing $core. Run npm run dist first." }
+if (-not (Test-Path $stub)) { throw "Missing $stub. Run pack.ps1 -Stage stub first." }
 
 $out = [IO.File]::Create($output)
 try {
@@ -29,7 +41,6 @@ try {
 } finally {
 	$out.Dispose()
 }
-Remove-Item $stub, $buildInfo
 
 $sha = [IO.File]::OpenRead($output)
 try { $hash = [Convert]::ToBase64String([Security.Cryptography.SHA512]::Create().ComputeHash($sha)) } finally { $sha.Dispose() }

@@ -435,6 +435,11 @@ function runCommand(command) {
 	const settings = state.settings;
 	const prefs = state.prefs;
 
+	if (command.startsWith("sound:")) {
+		window.soundboard?.play(command.slice(6));
+		return;
+	}
+
 	if (command.startsWith("preset:") || command.startsWith("builtin:")) {
 		const preset = findPreset(command, state.presets);
 		if (preset && isUnlocked(preset, state.stats)) change(presetSettings(preset));
@@ -960,7 +965,8 @@ function acceleratorFrom(event) {
 
 async function applyHotkeys() {
 
-	state.failedHotkeys = await desktop.setHotkeys(state.prefs.hotkeys).catch(() => []);
+	const hotkeys = { ...state.prefs.hotkeys, ...(window.soundboard?.hotkeys() ?? {}) };
+	state.failedHotkeys = await desktop.setHotkeys(hotkeys).catch(() => []);
 	for (const update of prefUpdaters) update();
 
 }

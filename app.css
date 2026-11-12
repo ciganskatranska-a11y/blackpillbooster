@@ -118,7 +118,7 @@ body.is-quaking {
 
 .tabs {
 	display: grid;
-	grid-template-columns: repeat(8, auto);
+	grid-template-columns: repeat(9, auto);
 	border-top: 2px solid var(--line);
 	border-bottom: 2px solid var(--accent);
 	transition: border-color .15s;
@@ -133,14 +133,14 @@ body.is-hot .tabs {
 	align-items: center;
 	justify-content: center;
 	gap: 3px;
-	padding: 8px 2px 7px;
+	padding: 8px 1px 7px;
 	border: 0;
 	border-left: 2px solid var(--line);
 	background: #000;
 	color: var(--muted);
 	font: 800 14px/1 var(--condensed);
 	text-transform: uppercase;
-	letter-spacing: .04em;
+	letter-spacing: .02em;
 }
 
 .tabs button:first-child {
@@ -1239,4 +1239,146 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 
 #recordStatus {
 	overflow-wrap: anywhere;
+}
+
+/* Soundboard */
+
+#panel-sounds.is-drop {
+	outline: 2px dashed var(--accent);
+	outline-offset: -2px;
+}
+
+.sound-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 6px;
+	margin-top: 10px;
+}
+
+.sound-grid:empty {
+	display: none;
+}
+
+.sound-empty {
+	margin: 10px 0 0;
+	padding: 26px 12px;
+	border: 2px dashed var(--line);
+	color: var(--muted);
+	text-align: center;
+}
+
+.pad {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	border: 2px solid var(--line);
+	background: var(--panel);
+}
+
+.pad.is-playing {
+	border-color: var(--accent);
+}
+
+.pad-play {
+	position: relative;
+	display: flex;
+	align-items: flex-end;
+	min-height: 68px;
+	padding: 22px 10px 10px;
+	border: 0;
+	background: none;
+	color: var(--text);
+	text-align: left;
+	overflow: hidden;
+}
+
+.pad-play:hover,
+.pad.is-playing .pad-play {
+	background: var(--raised);
+}
+
+.pad-play:active {
+	background: var(--accent);
+	color: var(--on-accent);
+}
+
+.pad-name {
+	font: 800 17px/1.05 var(--condensed);
+	text-transform: uppercase;
+	letter-spacing: .02em;
+	overflow-wrap: anywhere;
+}
+
+.pad-key {
+	position: absolute;
+	top: 6px;
+	right: 8px;
+	color: var(--muted);
+	font: 600 11px/1 var(--condensed);
+	text-transform: uppercase;
+	letter-spacing: .06em;
+}
+
+.pad-key.is-taken {
+	color: var(--hot);
+	text-decoration: line-through;
+}
+
+.pad-bar {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 0;
+	height: 3px;
+	background: var(--accent);
+}
+
+.pad-name-input {
+	min-height: 68px;
+	margin: 0;
+	padding: 10px;
+	border: 0;
+	background: var(--raised);
+	font: 800 17px/1.05 var(--condensed);
+	text-transform: uppercase;
+	outline: none;
+}
+
+.pad-tools {
+	display: flex;
+	border-top: 2px solid var(--line);
+}
+
+.pad-tools button {
+	flex: 1;
+	padding: 5px 0;
+	border: 0;
+	border-right: 2px solid var(--line);
+	background: #000;
+	color: var(--muted);
+	font: 600 11px/1.2 var(--condensed);
+	text-transform: uppercase;
+	letter-spacing: .06em;
+}
+
+.pad-tools button:last-child {
+	border-right: 0;
+}
+
+.pad-tools button:hover {
+	background: var(--raised);
+	color: var(--text);
+}
+
+.pad-tools .is-armed {
+	color: var(--hot);
+}
+
+.sound-value {
+	font: 800 15px/1 var(--condensed);
+}
+
+#soundVolume {
+	width: 100%;
+	margin-top: 8px;
 }

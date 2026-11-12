@@ -18,15 +18,31 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: Build setup/uninstaller window
+        shell: pwsh
+        run: ./installer/pack.ps1 -Stage stub
       - run: npm run dist -- --publish never
       - name: Wrap installer in the setup window
         shell: pwsh
-        run: ./installer/pack.ps1
+        run: ./installer/pack.ps1 -Stage wrap
       - name: Publish release
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $files = @("dist\Blackpill-Booster-Setup.exe", "dist\latest.yml")
-          gh release create $env:GITHUB_REF_NAME @files --title $env:GITHUB_REF_NAME.TrimStart("v") --generate-notes --latest
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $tag = $env:GITHUB_REF_NAME
+          $files = @("dist/Blackpill-Booster-Setup.exe", "dist/latest.yml")
+          Get-Item $files | Format-Table Name, Length
+          gh release view $tag *> $null
+          if ($LASTEXITCODE) {
+            gh release create $tag --title $tag.TrimStart("v") --generate-notes --latest
+            if ($LASTEXITCODE) { throw "gh release create failed ($LASTEXITCODE)" }
+          }
+          foreach ($attempt in 1..3) {
+            gh release upload $tag @files --clobber
+            if ($LASTEXITCODE -eq 0) { break }
+            Write-Warning "Upload attempt $attempt failed ($LASTEXITCODE)"
+            if ($attempt -eq 3) { throw "gh release upload failed" }
+            Start-Sleep -Seconds 15
+          }
+          gh release view $tag

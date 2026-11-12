@@ -377,6 +377,30 @@ function setupIpc() {
 		const allowed = { sound: "ms-settings:sound", mixer: "ms-settings:apps-volume", cable: "https://vb-audio.com/Cable/" };
 		return allowed[target] ? shell.openExternal(allowed[target]) : false;
 	});
+	const soundFolder = () => path.join(app.getPath("userData"), "sounds");
+	const soundPath = file => {
+		if (!/^[a-z0-9]+\.[a-z0-9]{1,5}$/.test(String(file))) throw new Error("Bad sound file name.");
+		return path.join(soundFolder(), file);
+	};
+	ipcMain.handle("sounds:import", async (event, name, bytes) => {
+		const data = Buffer.from(bytes);
+		if (!data.length || data.length > 40 * 1024 * 1024) throw new Error("Sounds must be smaller than 40 MB.");
+		const extension = (path.extname(String(name)).slice(1).toLowerCase().replace(/[^a-z0-9]/g, "") || "audio").slice(0, 5);
+		const file = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}.${extension}`;
+		await fs.promises.mkdir(soundFolder(), { recursive: true });
+		await fs.promises.writeFile(soundPath(file), data);
+		return file;
+	});
+	ipcMain.handle("sounds:read", async (event, file) => {
+		const data = await fs.promises.readFile(soundPath(file));
+		return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+	});
+	ipcMain.handle("sounds:delete", (event, file) => fs.promises.rm(soundPath(file), { force: true }));
+	ipcMain.handle("sounds:open", async () => {
+		await fs.promises.mkdir(soundFolder(), { recursive: true });
+		return shell.openPath(soundFolder());
+	});
+
 	ipcMain.handle("app:info", () => ({ platform: process.platform, version: app.getVersion(), isAutostart: app.getLoginItemSettings({ args: ["--autostart"] }).openAtLogin }));
 	ipcMain.handle("app:hide", () => {
 		if (tray) mainWindow?.hide();
@@ -505,9 +529,19 @@ function checkForUpdates() {
 
 if (!app.requestSingleInstanceLock()) {
 	app.quit();
+} else if (process.argv.includes("--quit")) {
+	// "--quit" (sent by the uninstaller) with nothing running: just exit, don't touch settings.
+	app.exit(0);
 } else {
 	app.setAppUserModelId("com.blackpill.booster");
-	app.on("second-instance", showWindow);
+	app.on("second-instance", (event, argv) => {
+		if (argv.includes("--quit")) {
+			isQuitting = true;
+			app.quit();
+			return;
+		}
+		showWindow();
+	});
 
 	app.whenReady().then(async () => {
 		store = readStore();

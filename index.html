@@ -31,6 +31,7 @@
 		<button type="button" role="tab" data-panel="eq" aria-selected="false">EQ<i data-flag="eq"></i></button>
 		<button type="button" role="tab" data-panel="voice" aria-selected="false">Voice<i data-flag="voice"></i></button>
 		<button type="button" role="tab" data-panel="smash" aria-selected="false" class="is-hot">Smash<i data-flag="smash"></i></button>
+		<button type="button" role="tab" data-panel="sounds" aria-selected="false">Sounds</button>
 		<button type="button" role="tab" data-panel="presets" aria-selected="false">Presets</button>
 		<button type="button" role="tab" data-panel="route" aria-selected="false">Route<i data-flag="route"></i></button>
 		<button type="button" role="tab" data-panel="system" aria-selected="false">System</button>
@@ -145,6 +146,41 @@
 			</div>
 		</section>
 
+		<section id="panel-sounds" class="panel" role="tabpanel" hidden>
+			<div class="cta">
+				<div>
+					<h2>Soundboard</h2>
+					<p>Add your own sounds or drop audio files here. Click a pad to play it, click again to stop. Give pads a hotkey to fire them from anywhere.</p>
+				</div>
+				<button id="soundAdd" class="solid" type="button">Add sounds</button>
+			</div>
+			<input id="soundFile" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.opus,.webm" multiple hidden>
+			<p id="soundStatus" class="hint" role="status" hidden></p>
+			<div id="soundGrid" class="sound-grid"></div>
+			<p id="soundEmpty" class="sound-empty">No sounds yet. Drop MP3, WAV, OGG, M4A or FLAC files here.</p>
+
+			<div class="group is-static">
+				<h3>Playback</h3>
+				<div class="switch-row">
+					<span>Volume</span>
+					<b id="soundVolumeText" class="sound-value">100%</b>
+				</div>
+				<input id="soundVolume" type="range" min="0" max="200" step="1" value="100" aria-label="Soundboard volume">
+				<p class="hint">Play on. Pick CABLE Input to send sounds into your mic for Discord or games (set CABLE Output as the mic there).</p>
+				<select id="soundOutput" class="wide-select" aria-label="Soundboard output"></select>
+				<p class="hint">Also hear it on</p>
+				<select id="soundMonitor" class="wide-select" aria-label="Soundboard monitor output"></select>
+				<div class="switch-row">
+					<span title="Lets several pads play at once. Off stops the last sound when a new one starts.">Overlap sounds</span>
+					<label class="switch"><input id="soundOverlap" type="checkbox" role="switch" aria-label="Overlap sounds"><span></span></label>
+				</div>
+				<div class="button-row">
+					<button id="soundStopAll" class="ghost" type="button">Stop all</button>
+					<button id="soundFolder" class="ghost" type="button">Open sounds folder</button>
+				</div>
+			</div>
+		</section>
+
 		<section id="panel-presets" class="panel" role="tabpanel" hidden>
 			<div class="group is-static">
 				<h3>Your presets</h3>
@@ -236,5 +272,6 @@
 	<script src="ui.js"></script>
 	<script src="engine.js"></script>
 	<script src="app.js"></script>
+	<script src="soundboard.js"></script>
 </body>
 </html>
