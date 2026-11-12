@@ -562,9 +562,27 @@ const simpleCodeKeys = [
 	"voice", "pitch", "vocals", "distortion", "distType", "distDrive", "distBits", "distMix",
 ];
 
+// App designs (Design tab). Each sets the CSS color variables in theme.css; accent and hot can
+// still be overridden with the color pickers.
+const designs = [
+	{ id: "blackpill", name: "Blackpill", note: "The original. Black, bone and blood.", bg: "#000000", panel: "#0a0a0a", raised: "#161616", line: "#2a2a2a", track: "#121212", text: "#ededed", muted: "#8a8a8a", accent: "#e6dcc3", hot: "#d21f2b", radius: 0, noise: .06 },
+	{ id: "brutal", name: "Brutal blackpill", note: "No mercy. Pure black, white and red.", bg: "#000000", panel: "#000000", raised: "#1a1a1a", line: "#ffffff", track: "#262626", text: "#ffffff", muted: "#b0b0b0", accent: "#ffffff", hot: "#ff0019", radius: 0, noise: 0 },
+	{ id: "femboy", name: "Femboy", note: "Soft, pink and rounded. Thigh highs not included.", bg: "#1d1020", panel: "#27162b", raised: "#351f3a", line: "#5a3560", track: "#2c1a31", text: "#ffeaf6", muted: "#c79bbd", accent: "#ff8fc7", hot: "#7fd4ff", radius: 12, noise: 0 },
+	{ id: "dark", name: "Dark", note: "Clean, calm, normal dark mode.", bg: "#121212", panel: "#1a1a1a", raised: "#242424", line: "#333333", track: "#1f1f1f", text: "#e8e8e8", muted: "#9a9a9a", accent: "#8ab4f8", hot: "#f2766b", radius: 6, noise: 0 },
+	{ id: "abyss", name: "Abyss", note: "Deep sea. Stare into it.", bg: "#01030a", panel: "#050a17", raised: "#0b1428", line: "#15233f", track: "#081020", text: "#cfe0ff", muted: "#6f84ab", accent: "#35c9f5", hot: "#8b5cff", radius: 2, noise: .05 },
+	{ id: "matrix", name: "Matrix", note: "Green on black. Wake up.", bg: "#000300", panel: "#020a02", raised: "#061506", line: "#0f3d0f", track: "#041004", text: "#b8ffb8", muted: "#4f9a4f", accent: "#00ff66", hot: "#f4ff3a", radius: 0, noise: .05 },
+	{ id: "vapor", name: "Vaporwave", note: "Neon sunset, 1987 forever.", bg: "#0d0221", panel: "#150734", raised: "#221048", line: "#3b1c73", track: "#180a3a", text: "#f3e8ff", muted: "#a58bd0", accent: "#00f0ff", hot: "#ff2e97", radius: 4, noise: .04 },
+	{ id: "gold", name: "Chad gold", note: "Black and gold. Mogs everything.", bg: "#050402", panel: "#0d0b06", raised: "#1a160c", line: "#3a3018", track: "#141008", text: "#f5ecd6", muted: "#9c8f6e", accent: "#f5c542", hot: "#ff5a1f", radius: 0, noise: .06 },
+];
+
+function findDesign(id) {
+	return designs.find(design => design.id === id) ?? designs[0];
+}
+
 function defaultPrefs() {
 
 	return {
+		design: "blackpill",
 		newTabs: "last",
 		volumeStep: 10,
 		normalCap: 600,
@@ -656,6 +674,7 @@ function mergePrefs(saved) {
 	for (const key of ["accent", "hot"]) {
 		if (!/^#[0-9a-f]{6}$/i.test(prefs[key])) prefs[key] = defaultPrefs()[key];
 	}
+	if (!designs.some(design => design.id === prefs.design)) prefs.design = "blackpill";
 	if (!["auto", "direct", "capture"].includes(prefs.engineMode)) prefs.engineMode = "auto";
 	if (!["interactive", "balanced", "playback"].includes(prefs.latency)) prefs.latency = "interactive";
 	const hotkeys = {};

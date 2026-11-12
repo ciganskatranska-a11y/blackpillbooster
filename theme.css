@@ -33,6 +33,8 @@
 	--accent: #e6dcc3;
 	--hot: #d21f2b;
 	--on-accent: #000000;
+	--on-hot: #ffffff;
+	--radius: 0px;
 	--fill: var(--accent);
 	--angle: 90deg;
 	--condensed: "Barlow Condensed", "Arial Narrow", sans-serif;
@@ -65,7 +67,7 @@ body::before {
 	inset: 0;
 	z-index: 100;
 	pointer-events: none;
-	opacity: .06;
+	opacity: var(--noise, .06);
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -131,12 +133,12 @@ input[type="range"]::-webkit-slider-thumb {
 	margin-block-start: -4px;
 	border: 2px solid var(--fill);
 	border-radius: 999px;
-	background: linear-gradient(90deg, #000 0 50%, #1d1d1d 0);
-	box-shadow: 0 0 0 2px #000;
+	background: linear-gradient(90deg, var(--bg) 0 50%, var(--raised) 0);
+	box-shadow: 0 0 0 2px var(--bg);
 }
 
 input[type="range"]:hover::-webkit-slider-thumb {
-	background: linear-gradient(90deg, #000 0 50%, var(--fill) 0);
+	background: linear-gradient(90deg, var(--bg) 0 50%, var(--fill) 0);
 }
 
 input[type="range"]:disabled {
@@ -149,8 +151,8 @@ input[type="number"],
 select {
 	padding: 6px 8px;
 	border: 2px solid var(--line);
-	border-radius: 0;
-	background: #000;
+	border-radius: var(--radius);
+	background: var(--bg);
 }
 
 input[type="text"]:focus,
@@ -185,7 +187,7 @@ input[type="number"]::-webkit-outer-spin-button {
 	position: absolute;
 	inset: 0;
 	border: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	pointer-events: none;
 	transition: background .1s, border-color .1s;
 }
@@ -247,7 +249,7 @@ input[type="number"]::-webkit-outer-spin-button {
 	padding: 6px 2px;
 	border: 0;
 	border-left: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	color: var(--muted);
 	font: 600 13px/1.1 var(--condensed);
 	text-transform: uppercase;
@@ -278,8 +280,8 @@ input[type="number"]::-webkit-outer-spin-button {
 	flex: 1 0 auto;
 	padding: 6px 9px;
 	border: 2px solid var(--line);
-	border-radius: 0;
-	background: #000;
+	border-radius: var(--radius);
+	background: var(--bg);
 	font: 600 13px/1.1 var(--condensed);
 	text-transform: uppercase;
 	letter-spacing: .03em;
@@ -300,7 +302,7 @@ input[type="number"]::-webkit-outer-spin-button {
 .solid {
 	padding: 8px 14px;
 	border: 2px solid var(--accent);
-	border-radius: 0;
+	border-radius: var(--radius);
 	background: var(--accent);
 	color: var(--on-accent);
 	font: 800 14px/1.1 var(--condensed);
@@ -309,7 +311,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .solid:hover {
-	background: #000;
+	background: var(--bg);
 	color: var(--accent);
 }
 
@@ -354,11 +356,11 @@ input[type="number"]::-webkit-outer-spin-button {
 .solid.hot {
 	border-color: var(--hot);
 	background: var(--hot);
-	color: #fff;
+	color: var(--on-hot);
 }
 
 .solid.hot:hover {
-	background: #000;
+	background: var(--bg);
 	color: var(--hot);
 }
 
@@ -412,7 +414,7 @@ input[type="number"]::-webkit-outer-spin-button {
 	height: 24px;
 	padding: 0;
 	border: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	color: var(--muted);
 	font-size: 13px;
 	line-height: 1;
@@ -435,7 +437,7 @@ input[type="number"]::-webkit-outer-spin-button {
 .group.is-hot .segmented button[aria-checked="true"] {
 	border-color: var(--hot);
 	background: var(--hot);
-	color: #fff;
+	color: var(--on-hot);
 }
 
 .live {
@@ -482,7 +484,7 @@ input[type="number"]::-webkit-outer-spin-button {
 	display: flex;
 	align-items: center;
 	border: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 }
 
 .box:focus-within {
@@ -540,7 +542,7 @@ input[type="number"]::-webkit-outer-spin-button {
 	height: 130px;
 	margin-top: 10px;
 	border: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	cursor: ns-resize;
 	touch-action: none;
 }

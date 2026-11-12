@@ -1063,14 +1063,38 @@ function buildSystem() {
 	prefSelect(engine, "latency", "Latency", () => [["interactive", "Lowest delay"], ["balanced", "Balanced"], ["playback", "Most stable"]], restart);
 	prefSwitch(engine, "cpuGuard", "CPU guard", "Drops oversampling and HD pitch when the PC can't keep up", isOn => state.engine?.setGuardEnabled(isOn));
 
-	const look = systemGroup("Colors");
+	const designButtons = designs.map(design => {
+		const button = el("button", "design-card");
+		button.type = "button";
+		for (const key of ["bg", "panel", "line", "text", "muted", "accent", "hot"]) button.style.setProperty(`--d-${key}`, design[key]);
+		button.style.setProperty("--d-radius", `${design.radius}px`);
+		const swatches = el("span", "design-swatches");
+		swatches.append(el("i", "is-accent"), el("i", "is-hot"), el("i", "is-line"));
+		button.append(el("b", "", design.name), el("span", "design-note", design.note), swatches);
+		button.addEventListener("click", () => {
+			state.prefs.design = design.id;
+			state.prefs.accent = design.accent;
+			state.prefs.hot = design.hot;
+			savePrefs();
+		});
+		element("designGrid").append(button);
+		return [design, button];
+	});
+	prefUpdaters.push(() => {
+		for (const [design, button] of designButtons) button.setAttribute("aria-pressed", String(design.id === state.prefs.design));
+	});
+
+	const look = el("section", "group is-static");
+	look.append(el("h3", "", "Custom colors"), el("p", "hint", "Change the two main colors of the design you picked."));
+	element("designColors").append(look);
 	prefColor(look, "accent", "Accent");
 	prefColor(look, "hot", "Danger");
 	const resetColors = el("button", "ghost", "Reset colors");
 	resetColors.type = "button";
 	resetColors.addEventListener("click", () => {
-		state.prefs.accent = defaultPrefs().accent;
-		state.prefs.hot = defaultPrefs().hot;
+		const design = findDesign(state.prefs.design);
+		state.prefs.accent = design.accent;
+		state.prefs.hot = design.hot;
 		savePrefs();
 	});
 	look.append(resetColors);

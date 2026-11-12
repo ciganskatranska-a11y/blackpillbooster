@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld("desktop", {
 	readSound: file => ipcRenderer.invoke("sounds:read", file),
 	deleteSound: file => ipcRenderer.invoke("sounds:delete", file),
 	openSounds: () => ipcRenderer.invoke("sounds:open"),
+	setTitleBar: (color, symbolColor) => ipcRenderer.invoke("titlebar:set", color, symbolColor),
 	info: () => ipcRenderer.invoke("app:info"),
 	quit: () => ipcRenderer.invoke("app:quit"),
 	hide: () => ipcRenderer.invoke("app:hide"),

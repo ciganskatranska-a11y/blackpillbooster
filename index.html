@@ -34,6 +34,7 @@
 		<button type="button" role="tab" data-panel="sounds" aria-selected="false">Sounds</button>
 		<button type="button" role="tab" data-panel="presets" aria-selected="false">Presets</button>
 		<button type="button" role="tab" data-panel="route" aria-selected="false">Route<i data-flag="route"></i></button>
+		<button type="button" role="tab" data-panel="design" aria-selected="false">Design</button>
 		<button type="button" role="tab" data-panel="system" aria-selected="false">System</button>
 	</nav>
 
@@ -254,6 +255,17 @@
 				</div>
 				<p id="routeStatus" class="hint" role="status"></p>
 			</div>
+		</section>
+
+		<section id="panel-design" class="panel" role="tabpanel" hidden>
+			<div class="cta">
+				<div>
+					<h2>Design</h2>
+					<p>Pick how the whole app looks. It changes right away and is remembered.</p>
+				</div>
+			</div>
+			<div id="designGrid" class="design-grid"></div>
+			<div id="designColors"></div>
 		</section>
 
 		<section id="panel-system" class="panel" role="tabpanel" hidden>

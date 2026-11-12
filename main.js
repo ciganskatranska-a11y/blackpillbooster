@@ -401,6 +401,12 @@ function setupIpc() {
 		return shell.openPath(soundFolder());
 	});
 
+	ipcMain.handle("titlebar:set", (event, color, symbolColor) => {
+		if (!mainWindow || mainWindow.isDestroyed() || ![color, symbolColor].every(value => /^#[0-9a-f]{6}$/i.test(String(value)))) return;
+		mainWindow.setTitleBarOverlay({ color, symbolColor, height: 34 });
+		mainWindow.setBackgroundColor(color);
+	});
+
 	ipcMain.handle("app:info", () => ({ platform: process.platform, version: app.getVersion(), isAutostart: app.getLoginItemSettings({ args: ["--autostart"] }).openAtLogin }));
 	ipcMain.handle("app:hide", () => {
 		if (tray) mainWindow?.hide();

@@ -98,13 +98,13 @@ body.is-quaking {
 .status.is-hot {
 	border-color: var(--hot);
 	background: var(--hot);
-	color: #fff;
+	color: var(--on-hot);
 }
 
 .mode-chip {
 	padding: 0 6px;
 	border: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	color: var(--muted);
 	font: 600 11px/1.3 var(--condensed);
 	text-transform: uppercase;
@@ -118,7 +118,7 @@ body.is-quaking {
 
 .tabs {
 	display: grid;
-	grid-template-columns: repeat(9, auto);
+	grid-template-columns: repeat(10, auto);
 	border-top: 2px solid var(--line);
 	border-bottom: 2px solid var(--accent);
 	transition: border-color .15s;
@@ -136,7 +136,7 @@ body.is-hot .tabs {
 	padding: 8px 1px 7px;
 	border: 0;
 	border-left: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	color: var(--muted);
 	font: 800 14px/1 var(--condensed);
 	text-transform: uppercase;
@@ -158,7 +158,7 @@ body.is-hot .tabs {
 
 .tabs button.is-hot[aria-selected="true"] {
 	background: var(--hot);
-	color: #fff;
+	color: var(--on-hot);
 }
 
 .tabs i {
@@ -215,7 +215,7 @@ main {
 	width: 44px;
 	height: 44px;
 	border: 2px solid var(--accent);
-	background: #000;
+	background: var(--bg);
 	color: var(--accent);
 	font: 800 28px/1 var(--condensed);
 }
@@ -313,7 +313,7 @@ main {
 .tag-button {
 	padding: 2px 8px;
 	border: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	color: var(--text);
 	font: 800 13px/1.2 var(--condensed);
 	text-transform: uppercase;
@@ -341,7 +341,7 @@ input[type="range"].fader::-webkit-slider-runnable-track {
 	border: 2px solid var(--line);
 	background:
 		linear-gradient(90deg, transparent calc(var(--h) * 1% - 1px), var(--text) 0 calc(var(--h) * 1% + 1px), transparent 0),
-		linear-gradient(90deg, var(--accent) calc(min(var(--p), var(--h)) * 1%), var(--hot) 0 calc(var(--p) * 1%), #000 0);
+		linear-gradient(90deg, var(--accent) calc(min(var(--p), var(--h)) * 1%), var(--hot) 0 calc(var(--p) * 1%), var(--bg) 0);
 }
 
 input[type="range"].fader::-webkit-slider-thumb {
@@ -349,7 +349,7 @@ input[type="range"].fader::-webkit-slider-thumb {
 	block-size: 22px;
 	margin-block-start: -6px;
 	border: 3px solid var(--accent);
-	background: linear-gradient(90deg, #000 0 50%, #1d1d1d 0);
+	background: linear-gradient(90deg, var(--bg) 0 50%, var(--raised) 0);
 }
 
 body.is-hot input[type="range"].fader::-webkit-slider-thumb {
@@ -370,7 +370,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 	padding: 5px 0 4px;
 	border: 0;
 	border-left: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 }
 
 .ladder button:first-child {
@@ -409,7 +409,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 
 .ladder button.is-hot[aria-pressed="true"] {
 	background: var(--hot);
-	color: #fff;
+	color: var(--on-hot);
 }
 
 .ladder button[aria-pressed="true"] strong,
@@ -431,7 +431,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 .tool {
 	padding: 6px 4px;
 	border: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	font: 800 13px/1.1 var(--condensed);
 	text-transform: uppercase;
 	letter-spacing: .05em;
@@ -450,7 +450,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 .tool.record.is-recording {
 	border-color: var(--hot);
 	background: var(--hot);
-	color: #fff;
+	color: var(--on-hot);
 	animation: blink 1s steps(2) infinite;
 }
 
@@ -461,7 +461,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 
 .tool.panic:hover {
 	background: var(--hot);
-	color: #fff;
+	color: var(--on-hot);
 }
 
 .guard {
@@ -553,7 +553,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 	gap: 2px;
 	padding: 9px 11px;
 	border: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	text-align: left;
 }
 
@@ -588,12 +588,12 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 .toggles button.is-hot[aria-pressed="true"] {
 	border-color: var(--hot);
 	background: var(--hot);
-	color: #fff;
+	color: var(--on-hot);
 }
 
 .toggles button.is-warning {
 	border-color: var(--hot);
-	background: repeating-linear-gradient(-45deg, #000 0 8px, #1c0406 8px 16px);
+	background: repeating-linear-gradient(-45deg, var(--bg) 0 8px, #1c0406 8px 16px);
 	color: var(--hot);
 }
 
@@ -633,7 +633,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 .quick button {
 	padding: 7px 4px;
 	border: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	font: 800 13px/1.1 var(--condensed);
 	text-transform: uppercase;
 	letter-spacing: .02em;
@@ -668,7 +668,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 	min-height: 50px;
 	padding: 6px 7px;
 	border: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	text-align: left;
 }
 
@@ -698,7 +698,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 
 .preset-grid button.is-locked {
 	opacity: 1;
-	background: repeating-linear-gradient(-45deg, #000 0 6px, #0d0d0d 6px 12px);
+	background: repeating-linear-gradient(-45deg, var(--bg) 0 6px, var(--panel) 6px 12px);
 }
 
 .preset-grid button.is-locked strong {
@@ -718,7 +718,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 .preset-grid button.is-hot[aria-pressed="true"] {
 	border-color: var(--hot);
 	background: var(--hot);
-	color: #fff;
+	color: var(--on-hot);
 }
 
 .preset-grid button[aria-pressed="true"] strong,
@@ -733,7 +733,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 	min-height: 60px;
 	padding: 8px 12px;
 	border-color: var(--hot);
-	background: repeating-linear-gradient(-45deg, #000 0 10px, #1c0406 10px 20px);
+	background: repeating-linear-gradient(-45deg, var(--bg) 0 10px, #1c0406 10px 20px);
 }
 
 .preset-grid button.is-over strong {
@@ -848,7 +848,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 .mini {
 	padding: 2px 7px;
 	border: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	color: var(--muted);
 	font: 600 12px/1.2 var(--condensed);
 	text-transform: uppercase;
@@ -1065,7 +1065,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 	padding: 6px 0 5px;
 	border: 0;
 	border-left: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	font: 800 14px/1 var(--condensed);
 	letter-spacing: .04em;
 }
@@ -1085,7 +1085,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 
 .multipliers button.is-hot:hover {
 	background: var(--hot);
-	color: #fff;
+	color: var(--on-hot);
 }
 
 .meter-value.is-hot {
@@ -1153,7 +1153,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 	height: 26px;
 	padding: 0;
 	border: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 }
 
 .switch-row .box .num {
@@ -1180,7 +1180,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 .ghost.danger:hover {
 	border-color: var(--hot);
 	background: var(--hot);
-	color: #fff;
+	color: var(--on-hot);
 }
 
 .stat-grid {
@@ -1354,7 +1354,7 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 	padding: 5px 0;
 	border: 0;
 	border-right: 2px solid var(--line);
-	background: #000;
+	background: var(--bg);
 	color: var(--muted);
 	font: 600 11px/1.2 var(--condensed);
 	text-transform: uppercase;
@@ -1381,4 +1381,89 @@ body.is-hot input[type="range"].fader::-webkit-slider-thumb {
 #soundVolume {
 	width: 100%;
 	margin-top: 8px;
+}
+
+/* Design tab */
+
+.design-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.design-card {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 12px;
+	border: 2px solid var(--d-line);
+	border-radius: var(--d-radius);
+	background: var(--d-bg);
+	color: var(--d-text);
+	text-align: left;
+}
+
+.design-card b {
+	font: 800 19px/1 var(--condensed);
+	text-transform: uppercase;
+	letter-spacing: .02em;
+}
+
+.design-note {
+	min-height: 2.6em;
+	color: var(--d-muted);
+	font-size: 12px;
+	line-height: 1.3;
+}
+
+.design-swatches {
+	display: flex;
+	gap: 4px;
+	margin-top: 4px;
+}
+
+.design-swatches i {
+	flex: 1;
+	height: 10px;
+	border-radius: var(--d-radius);
+	background: var(--d-line);
+}
+
+.design-swatches .is-accent {
+	flex: 3;
+	background: var(--d-accent);
+}
+
+.design-swatches .is-hot {
+	background: var(--d-hot);
+}
+
+.design-card:hover {
+	border-color: var(--d-accent);
+}
+
+.design-card[aria-pressed="true"] {
+	border-color: var(--d-accent);
+	box-shadow: 0 0 0 2px var(--d-accent);
+}
+
+/* Rounded designs (Femboy, Dark...): --radius is 0 on the sharp ones */
+
+.cta,
+.mini,
+.tag-button,
+.nudge,
+.pad,
+.sound-empty,
+.scope,
+.design-card,
+select,
+input[type="text"],
+input[type="number"] {
+	border-radius: var(--radius);
+}
+
+.pad {
+	overflow: hidden;
 }

@@ -55,13 +55,18 @@ function paintRange(input, center) {
 function applyTheme(prefs) {
 
 	const root = document.documentElement;
-	const red = parseInt(prefs.accent.slice(1, 3), 16) / 255;
-	const green = parseInt(prefs.accent.slice(3, 5), 16) / 255;
-	const blue = parseInt(prefs.accent.slice(5, 7), 16) / 255;
-	const luminance = .2126 * red + .7152 * green + .0722 * blue;
+	const design = findDesign(prefs.design);
+	const luminance = color => (.2126 * parseInt(color.slice(1, 3), 16) + .7152 * parseInt(color.slice(3, 5), 16) + .0722 * parseInt(color.slice(5, 7), 16)) / 255;
+	const ink = color => (luminance(color) > .45 ? "#000000" : "#ffffff");
+	for (const key of ["bg", "panel", "raised", "line", "track", "text", "muted"]) root.style.setProperty(`--${key}`, design[key]);
+	root.style.setProperty("--radius", `${design.radius}px`);
+	root.style.setProperty("--noise", String(design.noise));
 	root.style.setProperty("--accent", prefs.accent);
 	root.style.setProperty("--hot", prefs.hot);
-	root.style.setProperty("--on-accent", luminance > .45 ? "#000000" : "#ffffff");
+	root.style.setProperty("--on-accent", ink(prefs.accent));
+	root.style.setProperty("--on-hot", ink(prefs.hot));
+	root.dataset.design = design.id;
+	if (typeof desktop === "object" && desktop.setTitleBar) desktop.setTitleBar(design.bg, design.text);
 
 }
 
