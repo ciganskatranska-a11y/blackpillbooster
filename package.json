@@ -1,7 +1,7 @@
 {
 	"name": "blackpill-booster",
 	"productName": "Blackpill Booster",
-	"version": "7.4.0",
+	"version": "7.4.1",
 	"description": "Mog the whole PC. System-wide volume booster with a mastering-grade Loudmaxx chain, EQ, voice changer and BONESMASHING.",
 	"main": "main.js",
 	"author": "Blackpill",

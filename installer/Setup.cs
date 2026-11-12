@@ -28,6 +28,15 @@ static class Program {
 	static int Main() {
 		string arguments = RawArguments();
 		bool isUninstaller = !Installer.HasPayload();
+		if (HasFlag(arguments, "/S") && !isUninstaller && HasFlag(arguments, "--updated")) {
+			// Auto-update: same silent install, but with a small progress window so it isn't a blank wait.
+			try {
+				PrepareUi();
+				return RunForm(new SetupForm(false, null, arguments));
+			} catch (Exception error) {
+				Log(error);
+			}
+		}
 		if (HasFlag(arguments, "/S")) {
 			try {
 				return isUninstaller ? Uninstaller.RunSilent(arguments) : Installer.RunSilent(arguments);
@@ -52,14 +61,26 @@ static class Program {
 			}
 		}
 
+		PrepareUi();
+		return RunForm(new SetupForm(isUninstaller, installDir, null));
+	}
+
+	static bool isUiReady;
+
+	static int RunForm(SetupForm form) {
+		Application.Run(form);
+		return form.ExitCode;
+	}
+
+	public static void PrepareUi() {
+		if (isUiReady) return;
+		isUiReady = true;
 		try {
 			SetProcessDPIAware();
 		} catch {
 		}
 		Application.EnableVisualStyles();
 		Application.SetCompatibleTextRenderingDefault(false);
-		Application.Run(new SetupForm(isUninstaller, installDir));
-		return 0;
 	}
 
 	public static void Log(Exception error) {
@@ -209,16 +230,55 @@ static class Installer {
 		}
 	}
 
+	// Deletes this run's temp folder, and any left by earlier runs (antivirus can hold the exe briefly).
 	public static void Cleanup(string core) {
+		string own = Path.GetDirectoryName(core);
+		for (int attempt = 0; attempt < 10 && Directory.Exists(own); attempt++) {
+			try {
+				Directory.Delete(own, true);
+			} catch {
+				Thread.Sleep(300);
+			}
+		}
 		try {
-			Directory.Delete(Path.GetDirectoryName(core), true);
+			foreach (string stale in Directory.GetDirectories(Path.GetTempPath(), "blackpill-setup-*")) {
+				try {
+					if (Directory.GetCreationTime(stale) < DateTime.Now.AddMinutes(-10)) Directory.Delete(stale, true);
+				} catch {
+				}
+			}
 		} catch {
+		}
+	}
+
+	// The NSIS upgrade step runs whatever UninstallString names. Point it back at the real NSIS
+	// uninstaller first (installer.nsh re-points it at the styled one when the install finishes).
+	public static void ResetUninstallString() {
+		try {
+			using (RegistryKey root = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall", true)) {
+				if (root == null) return;
+				foreach (string name in root.GetSubKeyNames()) {
+					using (RegistryKey key = root.OpenSubKey(name, true)) {
+						if (key == null) continue;
+						string display = key.GetValue("DisplayName") as string;
+						string current = key.GetValue("UninstallString") as string;
+						if (display == null || current == null || !display.StartsWith(Uninstaller.AppName)) continue;
+						int at = current.IndexOf(Uninstaller.StyledName, StringComparison.OrdinalIgnoreCase);
+						if (at < 0) continue;
+						string dir = current.Substring(0, at).Trim('"', ' ').TrimEnd(Path.DirectorySeparatorChar);
+						key.SetValue("UninstallString", (char)34 + Path.Combine(dir, Uninstaller.NsisName) + (char)34 + " /currentuser");
+					}
+				}
+			}
+		} catch (Exception error) {
+			Program.Log(error);
 		}
 	}
 
 	public static int RunSilent(string arguments) {
 		string core = Extract(null);
 		try {
+			ResetUninstallString();
 			string old = FindMachineInstall();
 			if (old != null) {
 				try {
@@ -236,7 +296,26 @@ static class Installer {
 static class Uninstaller {
 	public const string AppName = "Blackpill Booster";
 	public const string NsisName = "Uninstall Blackpill Booster.exe";
+	public const string StyledName = "Blackpill Booster Uninstaller.exe";
 	public const string TempPrefix = "blackpill-uninstall-";
+
+	// Runs the NSIS uninstaller from a temp copy (like NSIS itself does). Run from inside the install
+	// folder it can't remove itself, and older builds' app-running check killed anything in that folder.
+	static int RunNsis(string dir, string arguments) {
+		string nsis = Path.Combine(dir, NsisName);
+		string folder = Path.Combine(Path.GetTempPath(), "blackpill-unnsis-" + Guid.NewGuid().ToString("N").Substring(0, 8));
+		Directory.CreateDirectory(folder);
+		string copy = Path.Combine(folder, "uninstall.exe");
+		try {
+			File.Copy(nsis, copy, true);
+			return Installer.Run(copy, arguments);
+		} finally {
+			try {
+				Directory.Delete(folder, true);
+			} catch {
+			}
+		}
+	}
 
 	// NSIS upgrade step: '"<copy of this exe>" /S /KEEP_APP_DATA /currentuser --updated _?=<install dir>'
 	public static int RunSilent(string arguments) {
@@ -247,9 +326,8 @@ static class Uninstaller {
 			dir = Path.GetDirectoryName(Application.ExecutablePath);
 			arguments += " _?=" + dir;
 		}
-		string nsis = Path.Combine(dir, NsisName);
-		if (!File.Exists(nsis)) return 0;
-		return Installer.Run(nsis, arguments);
+		if (!File.Exists(Path.Combine(dir, NsisName))) return 0;
+		return RunNsis(dir, arguments);
 	}
 
 	public static void Relaunch() {
@@ -280,8 +358,8 @@ static class Uninstaller {
 			} catch {
 			}
 		}
-		DateTime until = DateTime.Now.AddSeconds(15);
-		while (Running().Length > 0 && DateTime.Now < until) Thread.Sleep(300);
+		DateTime until = DateTime.Now.AddSeconds(8);
+		while (Running().Length > 0 && DateTime.Now < until) Thread.Sleep(200);
 		foreach (Process process in Running()) {
 			try {
 				process.Kill();
@@ -294,8 +372,8 @@ static class Uninstaller {
 	public static int Remove(string dir) {
 		string nsis = Path.Combine(dir, NsisName);
 		if (!File.Exists(nsis)) throw new FileNotFoundException("Blackpill Booster's files were not found in " + dir + ". It may already be removed.");
-		int code = Installer.Run(nsis, "/S /currentuser _?=" + dir);
-		// Running in place (_?=) leaves the NSIS uninstaller behind; remove it and the folder.
+		int code = RunNsis(dir, "/S /currentuser _?=" + dir);
+		// With _?= NSIS leaves its own uninstaller (and so the folder) behind; remove them.
 		for (int attempt = 0; attempt < 10; attempt++) {
 			try {
 				if (File.Exists(nsis)) File.Delete(nsis);
@@ -314,9 +392,12 @@ static class Uninstaller {
 			Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "blackpill-booster-updater"),
 		};
 		foreach (string folder in folders) {
-			try {
-				if (Directory.Exists(folder)) Directory.Delete(folder, true);
-			} catch {
+			for (int attempt = 0; attempt < 8 && Directory.Exists(folder); attempt++) {
+				try {
+					Directory.Delete(folder, true);
+				} catch {
+					Thread.Sleep(400);
+				}
 			}
 		}
 	}
@@ -352,6 +433,9 @@ sealed class SetupForm : Form {
 	const int BaseHeight = 300;
 
 	readonly bool isUninstall;
+	readonly bool isUpdate;
+	readonly string updateArguments;
+	public int ExitCode;
 	readonly string installDir;
 	Phase phase = Phase.Ready;
 	string heading;
@@ -379,10 +463,15 @@ sealed class SetupForm : Form {
 	readonly Bitmap logo;
 	readonly System.Windows.Forms.Timer timer;
 
-	public SetupForm(bool isUninstall, string installDir) {
+	public SetupForm(bool isUninstall, string installDir, string updateArguments) {
 		this.isUninstall = isUninstall;
 		this.installDir = installDir;
-		if (isUninstall) {
+		this.updateArguments = updateArguments;
+		isUpdate = updateArguments != null;
+		if (isUpdate) {
+			heading = "Updating";
+			message = "Installing the new version. Blackpill Booster opens again when it's done.";
+		} else if (isUninstall) {
 			heading = "Remove Blackpill Booster";
 			message = "Removes the app, its shortcuts and its files. VB-CABLE stays installed; remove it from Windows Settings > Apps if you don't need it.";
 		} else {
@@ -398,7 +487,7 @@ sealed class SetupForm : Form {
 		ClientSize = new Size(S(BaseWidth), S(BaseHeight));
 		BackColor = Background;
 		DoubleBuffered = true;
-		Text = isUninstall ? "Uninstall Blackpill Booster" : "Blackpill Booster Setup";
+		Text = isUninstall ? "Uninstall Blackpill Booster" : isUpdate ? "Blackpill Booster Update" : "Blackpill Booster Setup";
 		try {
 			Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 			using (Icon large = new Icon(Icon, S(48), S(48))) {
@@ -463,9 +552,9 @@ sealed class SetupForm : Form {
 	void OnTick(object sender, EventArgs e) {
 		if (isBusy) {
 			double seconds = (DateTime.Now - busyStart).TotalSeconds;
-			float fake = busyFrom + (busyTo - busyFrom) * (float)(1 - Math.Exp(-seconds / (isUninstall ? 4 : 22)));
+			float fake = busyFrom + (busyTo - busyFrom) * (float)(1 - Math.Exp(-seconds / (isUninstall ? 4 : isUpdate ? 8 : 22)));
 			if (fake > progress) progress = fake;
-			if (!isUninstall && !isCableShown && File.Exists(Installer.CableLog)) {
+			if (!isUninstall && !isUpdate && !isCableShown && File.Exists(Installer.CableLog)) {
 				isCableShown = true;
 				SetText("Setting up VB-CABLE", "Installing the audio driver. Click Yes if Windows asks for permission, and Install if it asks about device software.");
 			}
@@ -513,7 +602,7 @@ sealed class SetupForm : Form {
 		Size first = TextRenderer.MeasureText(graphics, "BLACKPILL ", titleFont, Size.Empty, flags);
 		TextRenderer.DrawText(graphics, "BLACKPILL ", titleFont, new Point(titleLeft, headerTop - S(2)), TextColor, flags);
 		TextRenderer.DrawText(graphics, "BOOSTER", titleFont, new Point(titleLeft + first.Width, headerTop - S(2)), Hot, flags);
-		string subtitle = (isUninstall ? "UNINSTALL" : "SETUP") + "  " + (char)183 + "  V" + BuildInfo.Version;
+		string subtitle = (isUninstall ? "UNINSTALL" : isUpdate ? "UPDATE" : "SETUP") + "  " + (char)183 + "  V" + BuildInfo.Version;
 		TextRenderer.DrawText(graphics, subtitle, smallFont, new Point(titleLeft + S(1), headerTop + first.Height + S(2)), Muted, flags);
 
 		// Close button
@@ -565,7 +654,7 @@ sealed class SetupForm : Form {
 		Color fill;
 		Color ink;
 		if (phase == Phase.Working) {
-			label = (isUninstall ? "REMOVING  " : "INSTALLING  ") + (int)Math.Round(shownProgress * 100) + "%";
+			label = (isUninstall ? "REMOVING  " : isUpdate ? "UPDATING  " : "INSTALLING  ") + (int)Math.Round(shownProgress * 100) + "%";
 			fill = Raised;
 			ink = Muted;
 		} else if (isUninstall && phase != Phase.Done) {
@@ -636,6 +725,11 @@ sealed class SetupForm : Form {
 		base.OnFormClosing(e);
 	}
 
+	protected override void OnShown(EventArgs e) {
+		base.OnShown(e);
+		if (isUpdate) Start();
+	}
+
 	protected override void OnFormClosed(FormClosedEventArgs e) {
 		base.OnFormClosed(e);
 		if (isUninstall) Uninstaller.ScheduleSelfDelete();
@@ -671,22 +765,30 @@ sealed class SetupForm : Form {
 				Directory.Delete(Path.GetDirectoryName(Installer.CableLog), true);
 			} catch {
 			}
-			SetText("Installing", "Copying Blackpill Booster. If it's open, it will restart.");
+			Installer.ResetUninstallString();
+			if (isUpdate) SetText("Updating", "Installing the new version. Blackpill Booster opens again when it's done.");
+			else SetText("Installing", "Copying Blackpill Booster. If it's open, it will restart.");
 			Busy(0.12f, 0.95f);
-			int code = Installer.Run(core, "/S --force-run");
+			int code = Installer.Run(core, isUpdate ? updateArguments : "/S --force-run");
 			isBusy = false;
+			ExitCode = code;
 			if (code != 0) {
-				Fail("Install failed", "The installer stopped with code " + code + ". Close Blackpill Booster if it's open, then try again.");
+				Fail(isUpdate ? "Update failed" : "Install failed", "The installer stopped with code " + code + ". Close Blackpill Booster if it's open, then try again.");
 				return;
 			}
 			progress = 1;
+			if (isUpdate) {
+				BeginInvoke((MethodInvoker)delegate { phase = Phase.Done; Close(); });
+				return;
+			}
 			string cable = CableResult();
 			SetText("Installed", "Blackpill Booster is starting. " + (cable ?? "You can close this window."));
 			SetPhase(Phase.Done);
 		} catch (Exception error) {
 			isBusy = false;
+			ExitCode = 1;
 			Program.Log(error);
-			Fail("Install failed", error.Message);
+			Fail(isUpdate ? "Update failed" : "Install failed", error.Message);
 		} finally {
 			if (core != null) Installer.Cleanup(core);
 		}
