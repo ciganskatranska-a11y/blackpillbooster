@@ -19,17 +19,11 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run dist -- --publish never
-      - name: Build downloader
-        shell: pwsh
-        run: |
-          $makensis = Get-ChildItem "$env:LOCALAPPDATA\electron-builder\Cache" -Recurse -Filter makensis.exe | Where-Object { $_.Directory.Name -eq "Bin" } | Select-Object -First 1 -ExpandProperty FullName
-          & $makensis /V2 build\downloader.nsi
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Publish release
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $files = @("dist\Blackpill-Booster-Installer.exe", "dist\Blackpill-Booster-Setup.exe", "dist\latest.yml", "dist\Blackpill-Booster-Setup.exe.blockmap") | Where-Object { Test-Path $_ }
+          $files = @("dist\Blackpill-Booster-Setup.exe", "dist\latest.yml", "dist\Blackpill-Booster-Setup.exe.blockmap") | Where-Object { Test-Path $_ }
           gh release create $env:GITHUB_REF_NAME @files --title $env:GITHUB_REF_NAME.TrimStart("v") --generate-notes --latest
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
