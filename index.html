@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob: mediastream:">
+	<title>Blackpill Booster</title>
+	<link rel="stylesheet" href="theme.css">
+	<link rel="stylesheet" href="app.css">
+</head>
+<body class="is-window">
+	<div class="titlebar"><span>Blackpill Booster</span><i id="version"></i></div>
+
+	<header class="top">
+		<img class="logo" src="icons/icon48.png" alt="">
+		<div class="brand">
+			<h1>Blackpill <b>Booster</b></h1>
+			<p class="site"><span id="siteTitle">Whole PC</span></p>
+		</div>
+		<div class="badges">
+			<span id="status" class="status">Off</span>
+		</div>
+		<label class="switch power" title="Boost the whole PC">
+			<input id="power" type="checkbox" role="switch" aria-label="Boost the whole PC">
+			<span></span>
+		</label>
+	</header>
+
+	<nav class="tabs" role="tablist">
+		<button type="button" role="tab" data-panel="mog" aria-selected="true">Mog</button>
+		<button type="button" role="tab" data-panel="loud" aria-selected="false">Loud<i data-flag="loud"></i></button>
+		<button type="button" role="tab" data-panel="eq" aria-selected="false">EQ<i data-flag="eq"></i></button>
+		<button type="button" role="tab" data-panel="voice" aria-selected="false">Voice<i data-flag="voice"></i></button>
+		<button type="button" role="tab" data-panel="smash" aria-selected="false" class="is-hot">Smash<i data-flag="smash"></i></button>
+		<button type="button" role="tab" data-panel="presets" aria-selected="false">Presets</button>
+		<button type="button" role="tab" data-panel="route" aria-selected="false">Route<i data-flag="route"></i></button>
+		<button type="button" role="tab" data-panel="system" aria-selected="false">System</button>
+	</nav>
+
+	<p id="banner" class="banner" role="alert" hidden></p>
+
+	<main>
+		<section id="panel-mog" class="panel" role="tabpanel">
+			<div class="readout">
+				<button id="volumeDown" class="nudge" type="button" aria-label="Volume down">−</button>
+				<label id="big" class="big" title="Type any volume. There is no cap. Scroll to nudge.">
+					<span class="pct">%</span>
+				</label>
+				<button id="volumeUp" class="nudge" type="button" aria-label="Volume up">+</button>
+			</div>
+			<div class="meta">
+				<span id="volumeDb">0.0 dB</span>
+				<span id="tier" class="tier">Normie</span>
+				<span class="grow"></span>
+				<button id="ghost" class="tag-button" type="button">Ghost</button>
+				<button id="undo" class="tag-button" type="button" title="Undo (Ctrl+Z)" disabled>Undo</button>
+				<button id="redo" class="tag-button" type="button" title="Redo (Ctrl+Shift+Z)" disabled>Redo</button>
+			</div>
+			<input id="volume" class="fader" type="range" min="0" max="600" step="5" value="100" aria-label="Volume">
+			<div id="ladder" class="ladder" role="group" aria-label="PSL volume tiers"></div>
+			<div id="multipliers" class="multipliers" role="group" aria-label="Multiply the volume">
+				<button type="button" data-factor=".5">÷2</button>
+				<button type="button" data-factor="2">×2</button>
+				<button type="button" data-factor="10">×10</button>
+				<button type="button" data-factor="100" class="is-hot">×100</button>
+				<button type="button" data-factor="1000" class="is-hot">×1000</button>
+			</div>
+
+			<div id="compare" class="segmented compare" role="radiogroup" aria-label="Compare">
+				<button type="button" data-value="boosted" title="What the booster outputs">Boosted</button>
+				<button type="button" data-value="original" title="The PC without any processing">Original</button>
+				<button type="button" data-value="matched" title="Boosted, turned down to the original's loudness for a fair comparison">Matched</button>
+			</div>
+			<div class="tools">
+				<button id="slotA" class="tool slot" type="button" title="Settings slot A">A</button>
+				<button id="slotB" class="tool slot" type="button" title="Settings slot B">B</button>
+				<button id="copySlot" class="tool" type="button" title="Copy these settings to the other slot">Copy</button>
+				<button id="record" class="tool record" type="button" title="Record what you hear to a file">Record</button>
+				<button id="panic" class="tool panic" type="button" title="Back to 100%, limiter on, no distortion">Panic</button>
+			</div>
+			<p id="recordStatus" class="hint" role="status" hidden></p>
+			<p id="guard" class="banner guard" hidden>CPU guard turned off oversampling and HD pitch to keep the audio smooth.</p>
+
+			<section class="scope" aria-label="Meters">
+				<canvas id="spectrum" title="Click to switch between before and after" role="img" aria-label="Spectrum analyzer"></canvas>
+				<div class="meters" aria-hidden="true">
+					<span>Output</span>
+					<div class="meter output"><i id="outputBar"></i></div>
+					<span id="outputText" class="meter-value">−∞</span>
+					<span>Loudness</span>
+					<div class="meter loudness"><i id="loudnessBar"></i></div>
+					<span id="loudnessText" class="meter-value">−∞</span>
+					<span>Coping</span>
+					<div class="meter reduction"><i id="reductionBar"></i></div>
+					<span id="reductionText" class="meter-value">0.0</span>
+				</div>
+				<p id="chainText" class="scope-chain">Not boosting yet. Hit the power switch.</p>
+			</section>
+
+			<div id="toggles" class="toggles">
+				<button type="button" data-key="maxx" title="Auto gain, multiband, clipper, punch, bass and clarity in one tap"><strong>Loudmaxx</strong><span>Full loudness chain</span></button>
+				<button type="button" data-key="ultimate" class="is-hot" title="Stretches the slider. Typed volumes are never capped."><strong>ASCEND</strong><span>Stretch the slider</span></button>
+				<button type="button" data-key="distortion" class="is-hot" title="Distortion"><strong>BONESMASH</strong><span>Distortion</span></button>
+				<button type="button" data-key="limiter" title="Off lets audio clip at full scale"><strong>Cope limiter</strong><span>Clean peaks</span></button>
+			</div>
+			<div id="quickSliders" class="quick-sliders"></div>
+
+			<h2 class="rule">Stages</h2>
+			<div id="quick" class="quick"></div>
+
+			<h2 class="rule">Presets</h2>
+			<div id="builtIns" class="preset-grid"></div>
+			<div id="secrets" class="preset-grid secret"></div>
+			<div id="overSlot" class="preset-grid"></div>
+		</section>
+
+		<section id="panel-loud" class="panel" role="tabpanel" hidden>
+			<div class="cta">
+				<div>
+					<h2>Maxx everything</h2>
+					<p>One tap for the full mastering chain: auto gain, multiband, clipper, punch, bass mono, phantom bass and exciter. Then tune any stage below.</p>
+				</div>
+				<button id="maxxEverything" class="solid" type="button">Maxx it</button>
+			</div>
+			<div id="loudStrength"></div>
+		</section>
+
+		<section id="panel-eq" class="panel" role="tabpanel" hidden>
+			<div id="equalizer"></div>
+		</section>
+
+		<section id="panel-voice" class="panel" role="tabpanel" hidden>
+			<div class="group is-static">
+				<h3>Voice presets</h3>
+				<div id="voicePresets"></div>
+			</div>
+		</section>
+
+		<section id="panel-smash" class="panel" role="tabpanel" hidden>
+			<div class="cta is-hot">
+				<div>
+					<h2>BONESMASHING</h2>
+					<p>Hammers, fractures and crushes the sound. Reroll for random bone damage.</p>
+				</div>
+				<button id="reroll" class="solid hot" type="button">Reroll</button>
+			</div>
+		</section>
+
+		<section id="panel-presets" class="panel" role="tabpanel" hidden>
+			<div class="group is-static">
+				<h3>Your presets</h3>
+				<ul id="userPresets" class="preset-list"></ul>
+				<form id="savePreset" class="save-row">
+					<input id="presetName" type="text" maxlength="40" placeholder="Name these settings" aria-label="Preset name" required>
+					<button class="solid" type="submit">Save</button>
+				</form>
+			</div>
+			<div class="group is-static">
+				<h3>Share codes</h3>
+				<p class="hint">A code holds every setting. Send yours, or paste one to hear someone else's.</p>
+				<button id="copyCode" class="solid wide" type="button">Copy code for these settings</button>
+				<form id="codeForm" class="save-row">
+					<input id="codeInput" type="text" placeholder="Paste a BP code" aria-label="Share code" autocomplete="off" spellcheck="false">
+					<button class="ghost" type="submit">Apply</button>
+					<button id="saveCode" class="ghost" type="button">Save</button>
+				</form>
+				<p id="codeStatus" class="hint" role="status"></p>
+			</div>
+			<div class="group is-static">
+				<h3>Mog stats</h3>
+				<div id="statGrid" class="stat-grid"></div>
+			</div>
+		</section>
+
+		<section id="panel-route" class="panel" role="tabpanel" hidden>
+			<div class="cta">
+				<div>
+					<h2>Whole-PC routing</h2>
+					<p id="routeSummary">Every app plays into a silent cable. The booster grabs it, mogs it and plays it on your speakers.</p>
+				</div>
+				<button id="refreshDevices" class="solid" type="button">Rescan</button>
+			</div>
+			<ol id="routeSteps" class="steps"></ol>
+			<button id="installCable" class="solid wide" type="button" hidden>Install the virtual cable for me</button>
+			<p id="installStatus" class="hint" role="status" hidden></p>
+
+			<div class="group is-static">
+				<h3>Source</h3>
+				<p class="hint">What gets boosted. Auto picks the virtual cable. A microphone works too.</p>
+				<select id="source" class="wide-select" aria-label="Source"></select>
+			</div>
+			<div class="group is-static">
+				<h3>Output</h3>
+				<p class="hint">Where the boosted sound plays.</p>
+				<select id="sink" class="wide-select" aria-label="Output device"></select>
+			</div>
+			<div class="group is-static">
+				<h3>Second output</h3>
+				<p class="hint">Play the boosted sound on another device at the same time.</p>
+				<select id="mirror" class="wide-select" aria-label="Second output device"></select>
+				<div id="mirrorVolume"></div>
+			</div>
+			<div class="group is-static">
+				<h3>Windows hand-off</h3>
+				<div class="switch-row">
+					<span title="Sets the cable as the Windows output while boosting and puts your device back when you stop or quit">Switch Windows to the cable for me</span>
+					<label class="switch"><input id="autoRoute" type="checkbox" role="switch" aria-label="Switch Windows to the cable automatically"><span></span></label>
+				</div>
+				<p class="hint">Cable playback device</p>
+				<select id="routeDevice" class="wide-select" aria-label="Cable playback device"></select>
+				<div class="switch-row">
+					<span title="System loopback only. Silences the device being captured so you only hear the boosted copy.">Mute the original (loopback)</span>
+					<label class="switch"><input id="muteOriginal" type="checkbox" role="switch" aria-label="Mute the original in loopback mode"><span></span></label>
+				</div>
+				<div class="button-row">
+					<button id="openSound" class="ghost" type="button">Windows sound settings</button>
+					<button id="openMixer" class="ghost" type="button">Per-app volume mixer</button>
+					<button id="getCable" class="ghost" type="button">VB-CABLE website</button>
+				</div>
+				<p id="routeStatus" class="hint" role="status"></p>
+			</div>
+		</section>
+
+		<section id="panel-system" class="panel" role="tabpanel" hidden>
+			<div id="systemGroups"></div>
+		</section>
+	</main>
+
+	<footer class="bottom">
+		<button id="resetAll" class="link" type="button">Back to normie</button>
+		<button id="openRecordings" class="link" type="button">Recordings</button>
+		<button id="hideWindow" class="link" type="button">Hide to tray</button>
+		<button id="quit" class="link" type="button">Quit</button>
+	</footer>
+
+	<script src="shared.js"></script>
+	<script src="ui.js"></script>
+	<script src="engine.js"></script>
+	<script src="app.js"></script>
+</body>
+</html>

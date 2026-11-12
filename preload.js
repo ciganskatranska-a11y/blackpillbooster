@@ -1,0 +1,27 @@
+const { contextBridge, ipcRenderer } = require("electron");
+
+contextBridge.exposeInMainWorld("desktop", {
+	loadStore: () => ipcRenderer.invoke("store:load"),
+	saveStore: patch => ipcRenderer.invoke("store:save", patch),
+	resetStore: () => ipcRenderer.invoke("store:reset"),
+	listDevices: () => ipcRenderer.invoke("devices:list"),
+	route: name => ipcRenderer.invoke("devices:route", name),
+	restoreRoute: () => ipcRenderer.invoke("devices:restore"),
+	installCable: () => ipcRenderer.invoke("cable:install"),
+	setLoopbackMute: isMuted => ipcRenderer.invoke("devices:loopbackMute", isMuted),
+	setHotkeys: hotkeys => ipcRenderer.invoke("hotkeys:set", hotkeys),
+	updateTray: state => ipcRenderer.invoke("tray:update", state),
+	setAutostart: isOn => ipcRenderer.invoke("autostart:set", isOn),
+	saveRecording: (bytes, name) => ipcRenderer.invoke("recording:save", bytes, name),
+	recordingFolder: () => ipcRenderer.invoke("recording:folder"),
+	chooseRecordingFolder: () => ipcRenderer.invoke("recording:choose"),
+	openRecordingFolder: () => ipcRenderer.invoke("recording:open"),
+	revealRecording: file => ipcRenderer.invoke("recording:reveal", file),
+	exportBackup: text => ipcRenderer.invoke("backup:export", text),
+	importBackup: () => ipcRenderer.invoke("backup:import"),
+	open: target => ipcRenderer.invoke("open:external", target),
+	info: () => ipcRenderer.invoke("app:info"),
+	quit: () => ipcRenderer.invoke("app:quit"),
+	hide: () => ipcRenderer.invoke("app:hide"),
+	onCommand: handler => ipcRenderer.on("command", (event, command) => handler(command)),
+});
