@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+	<title>Blackpill Booster Update</title>
+	<link rel="stylesheet" href="theme.css">
+	<link rel="stylesheet" href="update.css">
+</head>
+<body>
+	<header>
+		<img src="icons/icon48.png" alt="">
+		<div>
+			<h1>Blackpill <b>Booster</b></h1>
+			<p id="versions">Update</p>
+		</div>
+	</header>
+	<main>
+		<h2 id="title">Update available</h2>
+		<p id="message">A new version is ready.</p>
+		<div id="bar" class="bar" hidden><i id="fill"></i></div>
+	</main>
+	<footer>
+		<button id="later" class="ghost" type="button">Later</button>
+		<button id="update" class="solid" type="button">Update now</button>
+	</footer>
+	<script src="update.js"></script>
+</body>
+</html>

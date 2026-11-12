@@ -19,11 +19,14 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run dist -- --publish never
+      - name: Wrap installer in the setup window
+        shell: pwsh
+        run: ./installer/pack.ps1
       - name: Publish release
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $files = @("dist\Blackpill-Booster-Setup.exe", "dist\latest.yml", "dist\Blackpill-Booster-Setup.exe.blockmap") | Where-Object { Test-Path $_ }
+          $files = @("dist\Blackpill-Booster-Setup.exe", "dist\latest.yml")
           gh release create $env:GITHUB_REF_NAME @files --title $env:GITHUB_REF_NAME.TrimStart("v") --generate-notes --latest
           if ($LASTEXITCODE) { exit $LASTEXITCODE }

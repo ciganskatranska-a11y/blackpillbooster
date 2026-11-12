@@ -28,6 +28,13 @@ try {
 		exit 0
 	}
 
+	$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+	if (-not $isAdmin) {
+		Write-Step "Asking Windows for permission to install the VB-CABLE driver."
+		$elevated = Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", "`"$PSCommandPath`"" -Verb RunAs -Wait -PassThru
+		exit $elevated.ExitCode
+	}
+
 	$before = $null
 	try {
 		$before = Invoke-Devices @("list")

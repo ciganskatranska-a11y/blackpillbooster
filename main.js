@@ -396,40 +396,111 @@ if (process.env.BLACKPILL_FAKE_AUDIO) {
 }
 if (process.env.BLACKPILL_DEBUG_PORT) app.commandLine.appendSwitch("remote-debugging-port", process.env.BLACKPILL_DEBUG_PORT);
 
+let updateWindow = null;
+let updateState = null;
+
+function updateLog(level, parts) {
+	try {
+		const line = `${new Date().toISOString()} ${level} ${parts.map(part => (part instanceof Error ? part.stack || part.message : String(part))).join(" ")}\n`;
+		fs.appendFileSync(path.join(app.getPath("userData"), "update.log"), line);
+	} catch {}
+}
+
+function setUpdateState(patch) {
+	updateState = { ...updateState, ...patch };
+	if (updateWindow && !updateWindow.isDestroyed()) updateWindow.webContents.send("update:state", updateState);
+	if (mainWindow && !mainWindow.isDestroyed()) {
+		mainWindow.setProgressBar(updateState.phase === "downloading" ? (updateState.percent || 0) / 100 : updateState.phase === "installing" ? 2 : -1);
+	}
+}
+
+function showUpdateWindow() {
+	if (updateWindow && !updateWindow.isDestroyed()) {
+		updateWindow.show();
+		updateWindow.focus();
+		return;
+	}
+	updateWindow = new BrowserWindow({
+		width: 440,
+		height: 260,
+		resizable: false,
+		maximizable: false,
+		minimizable: false,
+		fullscreenable: false,
+		frame: false,
+		show: false,
+		backgroundColor: "#000000",
+		title: "Blackpill Booster Update",
+		icon: path.join(__dirname, "icons", "icon128.png"),
+		webPreferences: {
+			preload: path.join(__dirname, "update-preload.js"),
+			contextIsolation: true,
+			nodeIntegration: false,
+			spellcheck: false,
+		},
+	});
+	updateWindow.removeMenu();
+	updateWindow.loadFile(path.join(__dirname, "update.html"));
+	updateWindow.once("ready-to-show", () => updateWindow?.show());
+	updateWindow.on("closed", () => {
+		updateWindow = null;
+	});
+}
+
 function checkForUpdates() {
 	if (!app.isPackaged) return;
 	let autoUpdater;
 	try {
 		({ autoUpdater } = require("electron-updater"));
-	} catch {
+	} catch (error) {
+		updateLog("error", ["electron-updater missing", error]);
 		return;
 	}
+	autoUpdater.logger = {
+		info: (...parts) => updateLog("info", parts),
+		warn: (...parts) => updateLog("warn", parts),
+		error: (...parts) => updateLog("error", parts),
+		debug: () => {},
+	};
 	autoUpdater.autoDownload = false;
 	autoUpdater.autoInstallOnAppQuit = false;
-	autoUpdater.on("error", error => console.error("Update error:", error?.message || error));
-	autoUpdater.on("update-available", async info => {
-		const { response } = await dialog.showMessageBox(mainWindow?.isDestroyed() ? undefined : mainWindow, {
-			type: "info",
-			title: "Update available",
-			message: `Blackpill Booster v${info.version} is available.`,
-			detail: `You have v${app.getVersion()}. Download and install it now? The app will restart when it's done.`,
-			buttons: ["Update", "Not now"],
-			defaultId: 0,
-			cancelId: 1
-		});
-		if (response !== 0) return;
-		autoUpdater.on("download-progress", progress => mainWindow?.setProgressBar(progress.percent / 100));
-		autoUpdater.once("update-downloaded", () => {
-			mainWindow?.setProgressBar(-1);
-			isQuitting = true;
-			autoUpdater.quitAndInstall(false, true);
-		});
+	autoUpdater.disableDifferentialDownload = true;
+
+	let isDownloading = false;
+	const download = () => {
+		if (isDownloading) return;
+		isDownloading = true;
+		setUpdateState({ phase: "downloading", percent: 0, transferred: 0, total: 0 });
 		autoUpdater.downloadUpdate().catch(error => {
-			mainWindow?.setProgressBar(-1);
-			dialog.showErrorBox("Update failed", String(error?.message || error));
+			isDownloading = false;
+			setUpdateState({ phase: "error", error: String(error?.message || error).split("\n")[0] });
+			showUpdateWindow();
 		});
+	};
+
+	ipcMain.on("update:ready", event => {
+		if (updateState) event.sender.send("update:state", updateState);
 	});
-	autoUpdater.checkForUpdates().catch(() => {});
+	ipcMain.handle("update:start", download);
+	ipcMain.handle("update:later", () => updateWindow?.close());
+
+	autoUpdater.on("error", error => updateLog("error", [error]));
+	autoUpdater.on("update-available", info => {
+		setUpdateState({ phase: "available", version: info.version, current: app.getVersion() });
+		showUpdateWindow();
+	});
+	autoUpdater.on("download-progress", progress => {
+		setUpdateState({ phase: "downloading", percent: progress.percent, transferred: progress.transferred, total: progress.total });
+	});
+	autoUpdater.on("update-downloaded", () => {
+		setUpdateState({ phase: "installing" });
+		showUpdateWindow();
+		setTimeout(() => {
+			isQuitting = true;
+			autoUpdater.quitAndInstall(true, true);
+		}, 1500);
+	});
+	autoUpdater.checkForUpdates().catch(error => updateLog("error", ["check failed", error]));
 }
 
 if (!app.requestSingleInstanceLock()) {

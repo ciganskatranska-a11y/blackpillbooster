@@ -31,9 +31,12 @@ System-wide volume booster for Windows (Electron, x64). Version in `package.json
 ## Notes
 
 - Audio is routed through the VB-CABLE virtual driver; the installer sets it up.
-- Auto-update: `electron-updater` checks GitHub Releases on every start (packaged builds only, `checkForUpdates` in `main.js`) and asks the user before downloading; the installer reruns and reinstalls VB-CABLE only if missing.
+- Auto-update: `electron-updater` checks GitHub Releases on every start (packaged builds only, `checkForUpdates` in `main.js`). If there's an update it opens the styled update window (`update.html`/`update.js`/`update.css`/`update-preload.js`), downloads on "Update now", then runs the installer silently and relaunches. Log: `%APPDATA%\Blackpill Booster\update.log`.
+- Install is per-user (`%LOCALAPPDATA%\Programs`), so installs/updates need no admin. Only the VB-CABLE driver needs admin: `install-cable.ps1` elevates itself only when the cable is missing.
+- `installer/Setup.cs` is the styled setup window. `installer/pack.ps1` compiles it with the Windows-bundled .NET Framework `csc` (C# 5 only, no `$""`/`?.`), appends the NSIS installer (`dist/blackpill-booster-core.exe`) and writes `latest.yml` with its sha512. With `/S` the setup skips the window and passes args to NSIS (that's how updates run). It also removes old per-machine (Program Files) installs from versions up to 7.1.3.
+- Preview the update window: run Electron with `ELECTRON_RUN_AS_NODE` unset (VS Code sets it).
 - Releases: bump `version`, commit, push tag `vX.Y.Z`. `.github/workflows/release.yml` builds on a Windows runner and creates the release with `gh` (local builds fail here because Smart App Control blocks the unsigned build exe). It uploads `Blackpill-Booster-Setup.exe` + `latest.yml` (needed by the updater).
-- The installer is one-click (no wizard): installs the app + VB-CABLE, then launches it. Permanent download link: https://github.com/ciganskatranska-a11y/blackpillbooster/releases/latest/download/Blackpill-Booster-Setup.exe
+- Users download one file, `Blackpill-Booster-Setup.exe` (setup window + embedded NSIS): installs the app + VB-CABLE, then launches it. Permanent download link: https://github.com/ciganskatranska-a11y/blackpillbooster/releases/latest/download/Blackpill-Booster-Setup.exe
 - Don't use electron-builder's `--publish always`: v7.1.0's assets ended up 404 when it uploaded them.
 
 ## Workflow
